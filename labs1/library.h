@@ -19,8 +19,8 @@ struct Block
     int operationCounter;
 };
 
-void creatArray(int size);
-void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfPairs, ...);
+struct MainArray creatMainArray(int size);
+void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfFiles, ...);
 int creatNewBlockFrom(struct MainArray, char* fileName);
 int howManyOperationsInBlockNr(struct MainArray, int blockNumber);
 void deleteOperationBlock(struct MainArray, int blockNumber);
