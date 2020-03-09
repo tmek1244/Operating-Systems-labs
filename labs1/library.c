@@ -100,7 +100,6 @@ int creatNewBlockFrom(struct MainArray *mainArray, char* fileName)
         if(line_buf[0] == '$')
         {
             mainArray->lastElementIndex++;
-            operationNumber = -1;
             getline(&line_buf, &line_buf_size, file);
             if(line_buf_size == 0)
             {
@@ -109,7 +108,7 @@ int creatNewBlockFrom(struct MainArray *mainArray, char* fileName)
             {
                 operationNumber = -1;
                 currentOperationBlock++;
-                if(currentOperationBlock >= mainArray->size)
+                if(currentOperationBlock > mainArray->size)
                 {
                     printf("There is no space for new operation block!\n");
                     return -2;
@@ -172,7 +171,6 @@ void deleteOperationBlock(struct MainArray mainArray, int blockNumber)
         free(mainArray.blocks[blockNumber]->arrayOfOperations[i]);
     }
     free(mainArray.blocks[blockNumber]);
-    mainArray.blocks[blockNumber] = NULL;
 }
 
 // ----------------------------- SIXTH FUNCTION -------------------------------------
@@ -191,5 +189,4 @@ void deleteOperationInBlockNr(struct MainArray mainArray, int blockNumber, int o
         return;
     }
     free(mainArray.blocks[blockNumber]->arrayOfOperations[operationNumber]);
-    mainArray.blocks[blockNumber]->arrayOfOperations[operationNumber] = NULL;
 }

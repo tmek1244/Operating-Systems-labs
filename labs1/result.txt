@@ -1,11 +1,62 @@
-1c1,5
-< cos tam w \n wpierszym pliku
+1c1,3
+<   asdnf
 ---
-> plik 4
+> nk a
+>  asdnf
+> jf a n
+2a5,9
+>  
+> das
+>  
+>  ksdm a
+> dn ankf 
+4,5c11
+< nk a
+< adasdad
+---
+> a dnf a
+8,15c14
+< ka
+< d
+< sda
+<  
+< saddaak ndka d
+< 
+< asndfkafn jnfj sdnf 
+< ndf kadsnfnads
+---
+> f a
+17,19c16
+< f na
+< a dnf a
+<  ksdm a
+---
+> saddaak ndka d
+20a18,23
+> dnf ad
+> d
+> j asdnfn sd ljasdnf awne
+> sda
+> as
+> dasddas
+23,26d25
+< dasddas
+<  
+< as
+< f a
+28,30d26
+< das
+< jf a n
+< j asdnfn sd ljasdnf awne
+32,33c28,33
+< dn ankf 
+< dnf ad
+---
+> adasdad
+> asndfkafn jnfj sdnf 
 > 
-> 
-> 
-> do prowaniaa
-\ No newline at end of file
+> ndf kadsnfnads
+> f na
+> ka
 $
 ?
