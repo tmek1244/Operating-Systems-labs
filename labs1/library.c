@@ -29,7 +29,7 @@ struct MainArray creatMainArray(int size)
 
 // ----------------------------- SECOND FUNCTION -------------------------------------
 
-void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfFiles, ...)
+void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfFiles, char** arrayOfFiles)
 {
     if(numberOfFiles % 2 == 1)
     {
@@ -45,12 +45,10 @@ void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfFiles, .
         return;
     }
 
-    va_list arguments;
-    va_start(arguments, numberOfFiles);
     for(int i = 0; i < numberOfFiles / 2; i++)
     {
-        system(stringsConcatenate(8, "diff ", va_arg(arguments, char*), " ",
-                va_arg(arguments, char*), " >> ", resultFile, "; printf \"$\n\" >> ", resultFile));
+        system(stringsConcatenate(8, "diff ", arrayOfFiles[i], " ",
+                arrayOfFiles[i+1], " >> ", resultFile, "; printf \"$\n\" >> ", resultFile));
         //addFilePairToMainArray(mainArray, va_arg(arguments, char*), va_arg(arguments, char*));
     }
     system(stringsConcatenate(2, "printf \"?\" >> ", resultFile));
@@ -60,7 +58,7 @@ void findDifferencesInFilesAndSaveResults(char* resultFile, int numberOfFiles, .
 
 // ----------------------------- THIRD FUNCTION -------------------------------------
 
-int creatNewBlockFrom(struct MainArray mainArray, char* fileName)
+int creatNewBlockFrom(struct MainArray *mainArray, char* fileName)
 {
     FILE* file;
     file = fopen(fileName, "r");
@@ -75,8 +73,8 @@ int creatNewBlockFrom(struct MainArray mainArray, char* fileName)
     size_t line_buf_size = 0;
     getline(&line_buf, &line_buf_size, file);
 //    mainArray.lastElementIndex++;
-    int currentOperationBlock = mainArray.lastElementIndex + 1;
-    if(currentOperationBlock >= mainArray.size)
+    int currentOperationBlock = mainArray->lastElementIndex + 1;
+    if(currentOperationBlock >= mainArray->size)
     {
         printf("There is no space for new operation block\n");
         return -2;
@@ -84,8 +82,8 @@ int creatNewBlockFrom(struct MainArray mainArray, char* fileName)
     int operationNumber = -1;
 //    mainArray.blocks[currentOperationBlock]->arrayOfOperations;
     struct Block* newBlock = calloc(1, sizeof(struct Block));
-    mainArray.blocks[currentOperationBlock] = newBlock;
-    mainArray.blocks[currentOperationBlock]->arrayOfOperations = (char **) calloc(1, sizeof(char*));
+    mainArray->blocks[currentOperationBlock] = newBlock;
+    mainArray->blocks[currentOperationBlock]->arrayOfOperations = (char **) calloc(1, sizeof(char*));
     while(line_buf_size > 0)
     {
         //printf("%s", line_buf);
@@ -94,14 +92,14 @@ int creatNewBlockFrom(struct MainArray mainArray, char* fileName)
         if(line_buf[0] >= '0' && line_buf[0] <= '9')
         {
             operationNumber++;
-            mainArray.blocks[currentOperationBlock]->arrayOfOperations =
-                    realloc(mainArray.blocks[currentOperationBlock]->arrayOfOperations,
+            mainArray->blocks[currentOperationBlock]->arrayOfOperations =
+                    realloc(mainArray->blocks[currentOperationBlock]->arrayOfOperations,
                             (operationNumber + 1) * sizeof(char*));
-            mainArray.blocks[currentOperationBlock]->operationCounter = operationNumber + 1;
+            mainArray->blocks[currentOperationBlock]->operationCounter = operationNumber + 1;
         }
         if(line_buf[0] == '$')
         {
-            mainArray.lastElementIndex++;
+            mainArray->lastElementIndex++;
             operationNumber = -1;
             getline(&line_buf, &line_buf_size, file);
             if(line_buf_size == 0)
@@ -111,35 +109,33 @@ int creatNewBlockFrom(struct MainArray mainArray, char* fileName)
             {
                 operationNumber = -1;
                 currentOperationBlock++;
-                if(currentOperationBlock >= mainArray.size)
+                if(currentOperationBlock >= mainArray->size)
                 {
                     printf("There is no space for new operation block!\n");
                     return -2;
                 }
-                mainArray.blocks[currentOperationBlock] = calloc(1, sizeof(struct Block));;
-                mainArray.blocks[currentOperationBlock]->arrayOfOperations = (char **) calloc(1, sizeof(char*));
+                mainArray->blocks[currentOperationBlock] = calloc(1, sizeof(struct Block));;
+                mainArray->blocks[currentOperationBlock]->arrayOfOperations = (char **) calloc(1, sizeof(char*));
             }
         } else
         {
-            if(mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber] == NULL)
+            if(mainArray->blocks[currentOperationBlock]->arrayOfOperations[operationNumber] == NULL)
             {
-                mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber] = calloc(1, sizeof(char));
+                mainArray->blocks[currentOperationBlock]->arrayOfOperations[operationNumber] = calloc(1, sizeof(char));
             }
 //            operationNumber++;
 //            printf("%lu", strlen(mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber]));
-            char* result = malloc(sizeof(result) * (strlen(mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber]) +
+            char* result = malloc(sizeof(result) * (strlen(mainArray->blocks[currentOperationBlock]->arrayOfOperations[operationNumber]) +
                     strlen(line_buf) + 1));
-            strcpy(result, mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber]);
+            strcpy(result, mainArray->blocks[currentOperationBlock]->arrayOfOperations[operationNumber]);
             strcat(result, line_buf);
-            mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber] = result;
+            mainArray->blocks[currentOperationBlock]->arrayOfOperations[operationNumber] = result;
 //            printf("%s, %d, %d", mainArray.blocks[currentOperationBlock]->arrayOfOperations[operationNumber], currentOperationBlock, operationNumber);
             getline(&line_buf, &line_buf_size, file);
         }
     }
-//    printf("%d", mainArray.lastElementIndex);
-//    printf("%s", mainArray.blocks[1]->arrayOfOperations[1]);
 
-    return mainArray.lastElementIndex;
+    return mainArray->lastElementIndex;
 
 }
 
@@ -161,7 +157,7 @@ int howManyOperationsInBlockNr(struct MainArray mainArray, int blockNumber)
 
 void deleteOperationBlock(struct MainArray mainArray, int blockNumber)
 {
-    if(mainArray.lastElementIndex >= blockNumber || blockNumber < 0)
+    if(mainArray.lastElementIndex < blockNumber || blockNumber < 0)
     {
         printf("There is no block with this number!\n");
         return;
@@ -183,8 +179,9 @@ void deleteOperationBlock(struct MainArray mainArray, int blockNumber)
 
 void deleteOperationInBlockNr(struct MainArray mainArray, int blockNumber, int operationNumber)
 {
-    if(mainArray.size >= blockNumber || mainArray.blocks[blockNumber] == NULL)
+    if(mainArray.lastElementIndex < blockNumber || mainArray.blocks[blockNumber] == NULL)
     {
+        printf("%d", mainArray.lastElementIndex);
         printf("There is no block with this number!");
         return;
     }
