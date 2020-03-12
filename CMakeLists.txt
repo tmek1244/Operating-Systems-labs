@@ -3,4 +3,4 @@ project(SysOps C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(SysOps labs1/library.c labs1/library.h labs1/testingProgram.c)
+add_executable(SysOps labs2/InputOutputTest.c)
