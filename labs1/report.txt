@@ -1,4 +1,0 @@
-real time: 0:3372
-user time: 0
-cpu time: 0
-: 0
