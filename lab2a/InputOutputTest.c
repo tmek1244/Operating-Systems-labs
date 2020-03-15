@@ -6,17 +6,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-FILE* openAndCheck(char* fileName, char* mode)
-{
-    FILE* file;
-    file = fopen(fileName, mode);
-    if(file == NULL)
-    {
-        printf("Cannot open file\n");
-    }
-    return file;
-}
-
 char* stringsConcatenate(int numberOfStrings, ...)
 {
     va_list arguments;
