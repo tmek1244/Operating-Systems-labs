@@ -1,0 +1,95 @@
+sort number of records: 100000, size of one record: 8192, with lib option
+
+real	0m19.800s
+user	0m3.720s
+sys	0m13.072s
+
+sort number of records: 100000, size of one record: 8192, with sys option
+
+real	0m16.296s
+user	0m1.732s
+sys	0m9.120s
+
+sort number of records: 10000, size of one record: 8192, with lib option
+
+real	0m0.691s
+user	0m0.180s
+sys	0m0.508s
+
+sort number of records: 10000, size of one record: 8192, with sys option
+
+real	0m0.431s
+user	0m0.076s
+sys	0m0.352s
+
+sort number of records: 100000, size of one record: 4096, with lib option
+
+real	0m19.183s
+user	0m3.776s
+sys	0m12.252s
+
+sort number of records: 100000, size of one record: 4096, with sys option
+
+real	0m9.804s
+user	0m1.672s
+sys	0m8.092s
+
+sort number of records: 10000, size of one record: 4096, with lib option
+
+real	0m1.246s
+user	0m0.232s
+sys	0m1.008s
+
+sort number of records: 10000, size of one record: 4096, with sys option
+
+real	0m0.765s
+user	0m0.168s
+sys	0m0.596s
+
+sort number of records: 100000, size of one record: 1024, with lib option
+
+real	0m8.998s
+user	0m2.452s
+sys	0m6.488s
+
+sort number of records: 100000, size of one record: 1024, with sys option
+
+real	0m7.306s
+user	0m1.548s
+sys	0m5.608s
+
+sort number of records: 10000, size of one record: 1024, with lib option
+
+real	0m0.677s
+user	0m0.144s
+sys	0m0.528s
+
+sort number of records: 10000, size of one record: 1024, with sys option
+
+real	0m0.523s
+user	0m0.096s
+sys	0m0.424s
+
+sort number of records: 100000, size of one record: 512, with lib option
+
+real	0m5.425s
+user	0m1.644s
+sys	0m3.780s
+
+sort number of records: 100000, size of one record: 512, with sys option
+
+real	0m4.790s
+user	0m1.068s
+sys	0m3.720s
+
+sort number of records: 10000, size of one record: 512, with lib option
+
+real	0m0.524s
+user	0m0.200s
+sys	0m0.316s
+
+sort number of records: 10000, size of one record: 512, with sys option
+
+real	0m0.415s
+user	0m0.100s
+sys	0m0.312s
