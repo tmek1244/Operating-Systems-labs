@@ -155,7 +155,6 @@ char *typeOfFileNftw(int type){
 
 int displayInfo(const char* path, const struct stat infoAboutFile, int flagType, struct FTW* twBuff)
 {
-    printf("%d", flagType);
     struct tm *modTime;
     struct tm *accTime;
 

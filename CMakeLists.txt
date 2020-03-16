@@ -3,4 +3,4 @@ project(SysOps C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(SysOps lab2b/myFind.c)
+add_executable(SysOps lab2a/InputOutputTest.c)
