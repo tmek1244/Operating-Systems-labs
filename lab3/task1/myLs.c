@@ -32,7 +32,7 @@ void findStat(char* path)
         struct stat stats;
         printf("------------------------------------------------------------\n");
         printf("Path: %s\n", path);
-        printf("Pid: %i\n", pid);
+        printf("Pid: %i\n", (int)getpid());
         char command[80] = "ls -l ";
         strcat(command, path);
         system(command);
