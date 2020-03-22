@@ -18,6 +18,21 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
+char* option;
+
+char* intToString(int number, int size)
+{
+    char* result = malloc(size * sizeof(char));
+    for(int i = 0; i < size; i++)
+        result[i] = ' ';
+    char tmp[12];
+    sprintf(tmp, "%d", number);
+    for(int i = 0; i < strlen(tmp); i++)
+        result[i] = tmp[i];
+    return result;
+}
+
+
 void readMatricesNames(char* fileName, char* matrixA, char* matrixB, char* outputMatrix)
 {
     FILE* file;
@@ -84,10 +99,25 @@ int childProcess(int maxTimeInSecond, char* matrixAName, char* matrixBName, int 
     int howManyMultiplications = 0;
     int result = 0;
     int oneMultiply;
+    FILE* file = NULL;
+    if(strcmp(option, "1") == 0) // wspolny plik
+    {
+
+    }
+    else if(strcmp(option, "2") == 0) //osobne pliki
+    {
+        char outputFile[20];
+        sprintf(outputFile, "%d.txt", getpid());
+        file = fopen(outputFile, "w");
+    }
+
+
 //    printf("begin col b %i, end col b %i\n", colBBegin, colBEnd);
-    for(int k = colBBegin; k < colBEnd; k++) {
+    for (int i = 1; i <= sizeAy; i++)
+    {
 //        printf("------------------------------\n");
-        for (int i = 1; i <= sizeAy; i++) {
+        for(int k = colBBegin; k < colBEnd; k++)
+        {
             result = 0;
             for (int j = 1; j <= sizeBy; j++) {
                 oneMultiply = getNumber(matrixAName, i, j) * getNumber(matrixBName, j, k);
@@ -102,52 +132,21 @@ int childProcess(int maxTimeInSecond, char* matrixAName, char* matrixBName, int 
 
             }
             printf("value: %i to pos %i %i\n", result, i, k);
+            if(strcmp(option, "2") == 0)
+            {
+                fprintf(file, "%s ", intToString(result, 6));
+            }
             howManyMultiplications++;
         }
+        fprintf(file, "\n");
     }
 //    fclose(matrixA);
 //    fclose(matrixB);
 //    printf("how many multipications: %i\n", howManyMultiplications);
+    if(strcmp(option, "2") == 0) fclose(file);
     return howManyMultiplications;
 }
 
-void parentProcess(int timeForProcess, int childPID, int* status)
-{
-//    sleep(timeForProcess);
-//    kill(childPID, SIGTERM);
-//    waitpid(childPID, status, 0);
-//    printf("status %i\n", (*status));
-//    if (WIFEXITED((*status))){
-//        pid_t ret = WEXITSTATUS((*status));
-//        printf("%i\n", ret);
-//    }
-}
-
-//void test()
-//{
-//    int sum = 0;
-//    for(int i = 0; i < 5; i++)
-//    {
-//        int status = 0;
-//        pid_t childPid = fork();
-//
-//        if(childPid < 0)
-//        {
-//            printf("fork() error\n");
-//            return;
-//        }
-//        if(childPid == 0)
-//            childProcess();
-//        else {
-//            printf("Create process with childPid: %i\n", childPid);
-//            parentProcess(3, childPid, &status);
-//        }
-//        sum += status;
-//        printf("Process with pid %i has ended with value %i\n", childPid, status);
-//
-//    }
-//    printf("%i", sum);
-//}
 
 void getMatrixSize(char* fileName, int* rows, int* cols)
 {
@@ -236,15 +235,29 @@ void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numb
         }
     }
     sleep(timeForProcess);
-
+    char cmd[1000] = "";
 
     for (int i = 0; i < numberOfWorkerProcess; ++i){
         pid_t pid = PIDs[i];
         wait(&PIDs[i]);
         if (WIFEXITED(PIDs[i])){
             pid_t ret = WEXITSTATUS(PIDs[i]);
+            char outputFile[20] = "";
+            sprintf(outputFile, "%i.txt ", pid);
+            if(strcmp(option, "2") == 0) strcat(cmd, outputFile);
             printf("Proces %d wykonal %d mnozen.\n", pid, ret);
+            printf("cmd: %s\n", cmd);
         }
+    }
+    if(strcmp(option, "2") == 0) {
+        char cmd1[1000] = "";
+        strcat(cmd1, "paste ");
+        strcat(cmd1, cmd);
+        system(cmd1);
+        char cmd2[1000] = "";
+        strcat(cmd2, "rm ");
+        strcat(cmd2, cmd);
+        system(cmd2);
     }
     fclose(fMatrixA);
     fclose(fMatrixB);
@@ -253,7 +266,7 @@ void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numb
 
 int main(int argc, char* argv[])
 {
-    if(argc != 4) {
+    if(argc != 5) {
         printf("Wrong number of arguments");
         return 0;
     }
@@ -274,6 +287,7 @@ int main(int argc, char* argv[])
         printf("Time for one process must be positive integer");
         return 0;
     }
+    option = argv[4];
 
 
 
