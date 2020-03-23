@@ -1,0 +1,1 @@
+../lab3/task2/A.txt ../lab3/task2/B.txt ../lab3/task3/macierzC.txt

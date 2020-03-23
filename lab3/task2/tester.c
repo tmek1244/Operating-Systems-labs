@@ -1,17 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include <ctype.h>
 #include <time.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <ftw.h>
-#include <stdbool.h>
 #include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <math.h>
+
 
 
 int ** createMatrix(char* fileName, int rows, int cols)
@@ -62,6 +54,8 @@ char* intToString(int number, int size)
 
 void freeMatrix(int** result, int size)
 {
+    if(result == NULL)
+        return;
     for(int i = 0; i < size; i++)
         free(result[i]);
     free(result);
@@ -69,6 +63,12 @@ void freeMatrix(int** result, int size)
 
 int main(int argc, char* argv[])
 {
+    if(argc != 4)
+    {
+        printf("Wrong number of arguments\n");
+        return -1;
+    }
+
     int seed;
     time_t tt;
     seed = time(&tt);
@@ -118,13 +118,17 @@ int main(int argc, char* argv[])
     {
         for(int j = 0; j < colsB; j++)
         {
-            fprintf(file, "%s ", intToString(result[i][j], 6));
+            fprintf(file, "%s ", intToString(result[i][j], 7));
         }
         fprintf(file, "\n");
     }
+    if(strcmp(argv[3], "2") == 0)
+        system("gcc macierz.c -o macierze && ./macierze listaForTests.txt 10 2 2");
+    else if(strcmp(argv[3], "1") == 0)
+        system("gcc macierz.c -o macierze && ./macierze listaForTests.txt 10 2 1");
+    printf("==================================================\n");
+//    sleep(5);
+//    system("diff -w result.txt out.txt");
 
-    freeMatrix(matrixA, rowsA);
-    freeMatrix(matrixB, colsB);
-    freeMatrix(result, rowsA);
     return 0;
 }

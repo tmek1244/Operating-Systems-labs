@@ -1,1 +1,1 @@
-../lab3/task2/macierzA.txt ../lab3/task2/macierzB.txt macierzC.txt
+../lab3/task2/A.txt ../lab3/task2/B.txt ../lab3/task2/macierzC.txt
