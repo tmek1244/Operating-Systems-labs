@@ -1,15 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <memory.h>
+#include <ctype.h>
 #include <time.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <ftw.h>
 #include <stdbool.h>
-
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <math.h>
 
 #define min(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -32,30 +34,6 @@ char* intToString(int number, int size)
     return result;
 }
 
-void setLimits(char const * cpu, char const * mem)
-{
-    long int cpuLim = strtol(cpu, NULL, 10);
-    long int memoryLim = 1048576 * strtol(mem, NULL, 10);
-
-    struct rlimit cpuRLimit;
-    struct rlimit memoryRLimit;
-
-    cpuRLimit.rlim_max = (rlim_t) cpuLim;
-    cpuRLimit.rlim_cur = (rlim_t) cpuLim;
-    if(setrlimit(RLIMIT_CPU, &cpuRLimit) != 0)
-    {
-        printf("Error during setting limit");
-        return;
-    }
-
-    memoryRLimit.rlim_max = (rlim_t) memoryLim;
-    memoryRLimit.rlim_cur = (rlim_t) memoryLim;
-    if(setrlimit(RLIMIT_AS, &memoryRLimit) != 0)
-    {
-        printf("Error during setting limit");
-        return;
-    }
-}
 
 void readMatricesNames(char* fileName, char* matrixA, char* matrixB, char* outputMatrix)
 {
@@ -117,7 +95,7 @@ bool timePassed(int maxTimeInSecond, clock_t t)
 }
 
 int childProcess(int maxTimeInSecond, char* matrixAName, char* matrixBName, int colBBegin, int colBEnd, int sizeAy,
-                 int sizeBy, char* outputMatrix, int colsB)
+        int sizeBy, char* outputMatrix, int colsB)
 {
     clock_t t;
     t = clock();
@@ -182,7 +160,6 @@ void getMatrixSize(char* fileName, int* rows, int* cols)
 
     char line[256] = "";
     int howManyRows = 1;
-//    fseek(file, 0, 0);
     if(!fgets(line, sizeof(line), file))
     {
         printf("file is empty");
@@ -214,21 +191,8 @@ void getMatrixSize(char* fileName, int* rows, int* cols)
     fclose(file);
 }
 
-long int getUsageTime(struct timeval * t){
-    return (long int)t->tv_sec * 1000000 + (long int)t->tv_usec;
-}
 
-void reportUsage(struct rusage usage1, struct rusage usage2){
-    long int uCpuTime = labs(getUsageTime(&usage2.ru_utime) - getUsageTime(&usage1.ru_stime));
-    long int sCpuTime = labs(getUsageTime(&usage2.ru_stime) - getUsageTime(&usage1.ru_stime));
-    printf("\nuser CPU time used: %lf\n", (double)uCpuTime / 1000000);
-    printf("system CPU time used: %lf\n", (double)sCpuTime / 1000000);
-    printf("maximum resident set size: %ld\n", usage2.ru_maxrss);
-
-}
-
-void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numberOfWorkerProcess, int timeForProcess,
-        char* timeLimit, char* memoryLimit)
+void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numberOfWorkerProcess, int timeForProcess)
 {
     pid_t PIDs[numberOfWorkerProcess];
     for(int i = 0; i < numberOfWorkerProcess; i++)
@@ -281,10 +245,6 @@ void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numb
         {
             break;
         }
-        struct rusage usage1;
-        struct rusage usage2;
-
-
         pid_t pid = fork();
         if(pid < 0)
         {
@@ -293,19 +253,14 @@ void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numb
         }
 
         if(pid == 0) {
-            getrusage(RUSAGE_SELF, &usage1);
 //            printf("%i\n", getpid());
-            setLimits(timeLimit, memoryLimit);
             int result = childProcess(timeForProcess, matrixA, matrixB, colsPerProcess * i + 1,
                          min(colsPerProcess * (i + 1) + 1, colsB + 1), rowsA, rowsB, outputMatrix, colsB);
-            getrusage(RUSAGE_SELF, &usage2);
-            reportUsage(usage1, usage2);
             exit(result);
         } else
         {
             PIDs[i] = pid;
         }
-
     }
     sleep(1);
     char cmd[1000] = "";
@@ -341,7 +296,7 @@ void multiplyMatrices(char* matrixA, char* matrixB, char* outputMatrix, int numb
 
 int main(int argc, char* argv[])
 {
-    if(argc != 7) {
+    if(argc != 5) {
         printf("Wrong number of arguments");
         return 0;
     }
@@ -366,24 +321,12 @@ int main(int argc, char* argv[])
 
 
 
-
     readMatricesNames(argv[1], matrixA, matrixB, outputMatrix);
-    multiplyMatrices(matrixA, matrixB, outputMatrix, numberOfWorkerProcess, timeForProcess,
-            argv[5], argv[6]);
+    multiplyMatrices(matrixA, matrixB, outputMatrix, numberOfWorkerProcess, timeForProcess);
 
     free(matrixA);
     free(matrixB);
     free(outputMatrix);
-
-//    int rows = 0, cols = 0;
-//    FILE* file = fopen("../lab3/task2/macierzA.txt", "r");
-//    if(file == NULL)
-//        printf("nie udalo sie otworzyc");
-//    else{
-//        getMatrixSize(file, &rows, &cols);
-//        printf("rows: %i, cols: %i\n", rows, cols);
-//        fclose(file);
-//    }
 
     return 0;
 }

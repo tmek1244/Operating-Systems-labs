@@ -13,7 +13,7 @@ void printTime(struct timespec time, struct tms timeV2)
     printf("user time: %ld\n", time2V2.tms_cutime - timeV2.tms_cutime);
     printf("cpu time: %ld\n", time2V2.tms_cstime - timeV2.tms_cstime);
 
-    FILE *file = fopen("../lab1/report.txt", "r+");
+    FILE *file = fopen("../1lab/report.txt", "r+");
     if(file != NULL)
     {
         fprintf(file,"real time: %ld:%ld\n", time2.tv_sec - time.tv_sec,  time2.tv_nsec - time.tv_nsec);
@@ -63,8 +63,8 @@ int main(int argc, char* argv[])
                 arrayWithFilesNames[howManyFiles - 1] = argv[i];
                 i++;
             }
-            findDifferencesInFilesAndSaveResults("../lab1/result.txt", howManyFiles, arrayWithFilesNames);
-//            creatNewBlockFrom(&mainArray, "../lab1/result.txt");
+            findDifferencesInFilesAndSaveResults("../1lab/result.txt", howManyFiles, arrayWithFilesNames);
+//            creatNewBlockFrom(&mainArray, "../1lab/result.txt");
             if (timerOn)
                 printTime(time, timeV2);
             continue;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
                 times(&timeV2);
             } else
                 i--;
-            creatNewBlockFrom(&mainArray, "../lab1/result.txt");
+            creatNewBlockFrom(&mainArray, "../1lab/result.txt");
             if (timerOn)
                 printTime(time, timeV2);
 
