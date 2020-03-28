@@ -38,6 +38,7 @@ void waitForSignal() {
     struct sigaction act;
     act.sa_handler = sigtstpFunction;
     sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, SIGTSTP);
     act.sa_flags = 0;
     if (sigaction(SIGTSTP, &act, NULL) != 0){
         printf("Error with signal sigtstp");
