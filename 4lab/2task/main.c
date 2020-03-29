@@ -6,91 +6,123 @@
 #include <string.h>
 
 
-void handler(int sigNumber)
+void printMessage(int sigNumber)
 {
-    printf("Signal received %i\n", sigNumber);
+    printf("   Signal received: %i\n", sigNumber);
 }
 
-void checkInheritanceFork(char* option)
+void ignore()
 {
-    struct sigaction act;
-    if(strcmp(option, "ignore") == 0)
+    if(signal(SIGUSR1, SIG_IGN) == SIG_ERR)
     {
-        if(signal(SIGUSR1, SIG_IGN) == SIG_ERR)
-        {
-            printf("Error with SIG_IGN");
-            return;
-        }
-    }
-    else if(strcmp(option, "handler") == 0)
-    {
-        if(signal(SIGUSR1, handler) == SIG_ERR)
-        {
-            printf("Error with SIG_IGN");
-            return;
-        }
-    }
-    else if(strcmp(option, "mask") == 0)
-    {
-        sigset_t newMask;
-        sigset_t oldMask;
-
-        sigemptyset(&newMask);
-        sigaddset(&newMask, SIGUSR1);
-
-        if(sigprocmask(SIG_BLOCK, &newMask, &oldMask) < 0)
-        {
-            printf("Error, cannot block signal");
-            return;
-        }
-
-        sigset_t pendingSignals;
-        sigpending(&pendingSignals);
-
-        if(sigismember(&pendingSignals, SIGUSR1))
-        {
-            printf("SIGUSR1 is pending\n");
-        } else
-            printf("SIGUSR1 is not pending\n");
-    }
-    else
-    {
-        printf("Wrong option");
+        printf("Error with SIG_IGN");
         return;
     }
+}
 
+void handler()
+{
+    if(signal(SIGUSR1, printMessage) == SIG_ERR)
+    {
+        printf("Error with SIG_IGN");
+        return;
+    }
+}
 
-    raise(SIGUSR1);
+void mask()
+{
+    sigset_t newMask;
+    sigset_t oldMask;
+
+    sigemptyset(&newMask);
+    sigaddset(&newMask, SIGUSR1);
+
+    if(sigprocmask(SIG_BLOCK, &newMask, &oldMask) < 0)
+    {
+        printf("Error, cannot block signal");
+        return;
+    }
+}
+
+void checkIfSignalPending()
+{
     sigset_t pendingSignals;
     sigpending(&pendingSignals);
 
     if(sigismember(&pendingSignals, SIGUSR1))
     {
-        printf("SIGUSR1 is pending\n");
+        printf("   SIGUSR1 is pending\n");
     } else
-        printf("SIGUSR1 is not pending\n");
+        printf("   SIGUSR1 is not pending\n");
+}
 
-
+void forkAndExec(char* argS)
+{
+    int arg = atoi(argS);
+    printf("MAIN:\n");
+    raise(SIGUSR1);
+    if(arg % 3 == 0)
+        checkIfSignalPending();
     pid_t child;
     if ((child = fork()) == -1)
     {
-        perror("Nie powołano procesu potomnego");
+        perror("Error during fork\n");
         exit(1);
     }
     else if (child == 0)
     {
-        raise(SIGUSR1);
-        if(sigismember(&pendingSignals, SIGUSR1))
-        {
-            printf("SIGUSR1 is pending even at child\n");
-        } else
-            printf("SIGUSR1 is not pending at child\n");
+        printf("FORK:\n");
+        if(arg % 2 == 0)
+            raise(SIGUSR1);
+        if(arg % 3 == 0)
+            checkIfSignalPending();
         exit(EXIT_SUCCESS);
-    } else
-    {
-        execl("./sendSignal", NULL);
+    } else{
+        usleep(300);
+        printf("EXEC:\n");
+        execl("./operationsWithSignals", "operationWithSignals", argS, NULL);
     }
+}
 
+void ignoreProcedure()
+{
+    ignore();
+    forkAndExec("2");
+}
+
+void handlerProcedure()
+{
+    handler();
+    forkAndExec("2");
+}
+
+void maskProcedure()
+{
+    mask();
+    forkAndExec("6");
+}
+
+void pendingProcedure()
+{
+    mask();
+    forkAndExec("3");
+}
+
+void checkInheritanceFork(char* option)
+{
+    if(strcmp(option, "ignore") == 0)
+        ignoreProcedure();
+    else if(strcmp(option, "handler") == 0)
+        handlerProcedure();
+    else if(strcmp(option, "mask") == 0)
+        maskProcedure();
+    else if(strcmp(option, "pending") == 0)
+        pendingProcedure();
+    else
+    {
+        printf("Wrong option\n");
+        return;
+    }
 }
 
 int main(int argc, char * argv[]){
