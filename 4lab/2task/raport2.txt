@@ -1,0 +1,16 @@
+opcja ignore:
+    sygnał został zignorowany w MAIN, FORK oraz EXEC
+
+opcja handler:
+    sygnał został obsłużony w MAIN oraz FORK, nie został natomiast po wykonaniu EXEC
+
+opcja mask:
+    maska obsługi jest taka sama w każdym procesie MAIN, FORK oraz EXEC
+
+opcja penging:
+    sygnał oczekiwał w MAIN oraz EXEC, nie czekał natomiast w FORK
+
+
+Widzimy, że po wykonaniu funkcji fork proces potomny dziedziczy po swoim przodku wartość maski oraz ustalenia dotyczące obsługi sygnału. Natomiast widzimy, że sygnał oczekujący został wyczyszczony.
+
+Po wykonaniu funkcji exec maska obsługi sygnałów oraz nieobsłużone sygnały są takie same jak w procesie, w którym została wywołana funkcja exec. Natomiast obsługa wyjątków nie została przekazana, jeśli dodaliśmy własną funkcję. Inaczej sprawa wyglądała, gdy sygnał miał być ignorowany.

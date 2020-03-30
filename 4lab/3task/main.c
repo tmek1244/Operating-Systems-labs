@@ -7,12 +7,31 @@
 #include <sys/wait.h>
 
 
+//char* convertToSI(int nr)
+//{
+//    switch (nr)
+//    {
+//        case SI_USER:
+//            return "SI_USER";
+//        case SI_KERNEL:
+//            return "SI_KERNEL";
+//        case SI_QUEUE:
+//            return "SI_QUEUE";
+//        case SI_TIMER:
+//            return "SI_TIMER";
+//        default:
+//            return "unknown";
+//    }
+//}
+
+
 void handler(int sig, siginfo_t *info, void *context) {
     printf("signal nr: %i\n", sig);
     printf("si_code: %i\n", info->si_code);
     printf("si_status: %i\n", info->si_status);
     printf("si_errno: %i\n", info->si_errno);
     printf("si_pid: %i\n", info->si_pid);
+    printf("si_address: %i\n", info->si_addr);
     exit(0);
 //    exit(0);
 }
@@ -61,6 +80,9 @@ int main(int argc, char * argv[]){
     {
         sigaction(SIGQUIT, &act, NULL);
         exit(9);
+    } else
+    {
+        printf("Wrong argument\n");
     }
     return 0;
 }
