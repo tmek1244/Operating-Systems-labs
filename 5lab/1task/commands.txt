@@ -1,0 +1,5 @@
+cat file.txt | head -5
+cat file.txt | head -5 | wc -c
+ps aux | grep "root" | wc -l
+cat /etc/passwd | grep root
+ls | wc -l
