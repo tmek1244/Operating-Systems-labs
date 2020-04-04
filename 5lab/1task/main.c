@@ -27,20 +27,15 @@ char** splitLine(char* line, char* delimiter, int* size)
     return commands;
 }
 
-int executeLine(char* line)
+int executeLinePipe(char* line)
 {
     int numberOfCommands = 0;
     char delimiters[2] = {'|', '\n'};
     char** commands = splitLine(line, delimiters, &numberOfCommands);
     int pipes[2][2];
 
-//    printf("%s", line);
     for(int i = 0; i < numberOfCommands; i++)
     {
-//        if (i != 0){
-//            close(pipes[i % 2][0]);
-//            close(pipes[i % 2][1]);
-//        }
         if (pipe(pipes[i % 2]) < 0){
             printf("pipe error");
             return -1;
@@ -80,7 +75,10 @@ int executeLine(char* line)
     }
     close(pipes[numberOfCommands % 2][0]);
     close(pipes[numberOfCommands % 2][1]);
-    wait(NULL);
+    int status = 0;
+    pid_t childPid;
+    while ((childPid = wait(&status)) > 0);
+
     return 0;
 }
 
@@ -97,21 +95,8 @@ int run(char* fileName)
     ssize_t read;
 
     while ((read = getline(&line, &len, file)) != -1) {
-//        executeLine(line);
-//        pid_t pid = vfork();
-//        if(pid == 0)
-//        {
         printf("%s", line);
-        executeLine(line);
-        sleep(1);
-//            exit(0);
-//        }
-//        else
-//        {
-//            int status;
-//            wait(&status);
-//            printf("status: %d", status);
-//        }
+        executeLinePipe(line);
     }
 
 
@@ -129,8 +114,6 @@ int main(int argc, char** argv)
         return -1;
     }
     run(argv[1]);
-    int size;
-//    char** commands = splitLine("jakies | pare polecen | do przeciecia | tutaj", "|", &size);
-//    executeLine("ls | wc -l");
+
     return 0;
 }
