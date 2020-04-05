@@ -99,7 +99,6 @@ int run(char* fileName)
         executeLinePipe(line);
     }
 
-
     fclose(file);
     if(line)
         free(line);
