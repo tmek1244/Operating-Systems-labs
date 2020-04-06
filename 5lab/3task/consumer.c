@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 
 
 FILE* openFile(char* name, char* mode)
@@ -18,22 +17,17 @@ FILE* openFile(char* name, char* mode)
 
 int consume(char* pipeName, char* outputFileName, int n)
 {
-    mkfifo(pipeName, 0666);
     FILE* outputFile = openFile(outputFileName, "w");
     FILE* pipe = openFile(pipeName, "r");
 
-    char string[n];
-    char* result;
+    char* string = calloc(n, sizeof(char));
+    size_t result;
 
-    while((result = fgets(string, n, pipe)) != NULL)
+    while((result = fread(string, sizeof(char), n, pipe)) > 0)
     {
-//        printf("%s\n", result);
-        while((++result)[0] != '#');
-        printf("%s\n", result);
-
-        fputs(result, outputFile);
+        fwrite(string, sizeof(char), result, outputFile);
     }
-
+    free(string);
     fclose(outputFile);
     fclose(pipe);
     if(result)
