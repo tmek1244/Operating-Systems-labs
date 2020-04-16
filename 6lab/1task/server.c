@@ -22,6 +22,14 @@ void push(int new_value)
     available_ID[last_element] = new_value;
 }
 
+bool is_on_stack(int id)
+{
+    for(int i = 0; i < last_element; i++)
+        if(available_ID[i] == id)
+            return true;
+    return false;
+}
+
 int server_qid;
 struct client
 {
@@ -63,16 +71,15 @@ void send_list(int client_id)
 void add_client(int client_qid)
 {
     int new_id = pop();
-    struct message id_message = {Id, -1, new_id};
+    struct message id_message = {Init, -1, new_id};
     if(new_id == -1)
     {
         push(-1);
     } else
     {
-        client* new_client = &clients[new_id];
-        new_client->qid = client_qid;
-        new_client->peer = NULL;
-        printf("add_client with id: %d\n", new_id);
+        clients[new_id].qid = client_qid;
+        clients[new_id].peer = NULL;
+        printf("[SERVER] add_client with id: %d\n", new_id);
     }
     msgsnd(client_qid, &id_message, sizeof id_message, 0);
 
@@ -80,16 +87,23 @@ void add_client(int client_qid)
 
 void connect_client(int client_id, int other_client_id)
 {
-    struct message message = {Connect, -1, clients[client_id].qid};
+    if(is_on_stack(other_client_id) || other_client_id >= MAX_CLIENT_COUNT)
+    {
+        printf("[SERVER] There is no client with this id\n");
+        struct message message = {Connect, -1, -1};
+        msgsnd(clients[client_id].qid, &message, sizeof message, 0);
+    }
+    struct message message = {Connect, -1, -1};
+
     if(clients[other_client_id].peer == NULL)
     {
         msgsnd(clients[other_client_id].qid, &message, sizeof message, 0);
         message.data = clients[other_client_id].qid;
         clients[other_client_id].peer = &clients[client_id];
         clients[client_id].peer = &clients[other_client_id];
-        return;
+//        return;
     }
-    message.data = -1;
+//    printf("[SERVER] This client is busy\n");
     msgsnd(clients[client_id].qid, &message, sizeof message, 0);
 }
 
@@ -100,6 +114,7 @@ void disconnect_client(int client_id)
 
 void remove_client(int client_id)
 {
+    printf("[SERVER] remove client with id %d\n", client_id);
     clients[client_id].qid = 0;
     clients[client_id].peer = NULL;
     push(client_id);
@@ -152,7 +167,7 @@ int main()
                 remove_client(msg.id);
                 break;
         }
-        for(int i = 0; i <= last_element; i++)
-            printf("%d ", available_ID[i]);
+//        for(int i = 0; i <= last_element; i++)
+//            printf("%d ", available_ID[i]);
     }
 }

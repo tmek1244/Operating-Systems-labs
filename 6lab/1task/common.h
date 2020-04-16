@@ -20,10 +20,8 @@ typedef enum msg_t {
     Stop = 1,
     Disconnect = 2,
     List = 3,
-    ListReq = 3,
     Connect,
     Init,
-    Id,
 } msg_t;
 
 
