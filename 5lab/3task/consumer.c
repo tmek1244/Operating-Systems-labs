@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 
 FILE* openFile(char* name, char* mode)
@@ -17,6 +18,7 @@ FILE* openFile(char* name, char* mode)
 
 int consume(char* pipeName, char* outputFileName, int n)
 {
+    mkfifo(pipeName, 0666);
     FILE* outputFile = openFile(outputFileName, "w");
     FILE* pipe = openFile(pipeName, "r");
 

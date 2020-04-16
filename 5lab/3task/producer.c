@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 int openFile(char* name, int mode)
 {
@@ -18,6 +19,7 @@ int openFile(char* name, int mode)
 
 int produce(int pipe, int inputFile, int n)
 {
+
     char* string = calloc(n, sizeof(char));
     char* result = calloc(n + 15, sizeof(char));
     size_t amount;
@@ -37,6 +39,8 @@ int produce(int pipe, int inputFile, int n)
 
 void startProduction(char* pipeName, char* inputFileName, int n)
 {
+    mkfifo(pipeName, 0666);
+
     int inputFile = openFile(inputFileName, O_RDONLY);
     int pipe = openFile(pipeName, O_WRONLY);
 
