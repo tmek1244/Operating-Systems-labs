@@ -63,40 +63,71 @@ void disconnect()
     msgsnd(server_qid, &message, sizeof message, 0);
 }
 
-int main()
+void check_for_message()
+{
+//    printf("Looking for messages\n");
+    struct message message;
+    msgrcv(client_qid, &message, sizeof message, -100, IPC_NOWAIT);
+    if(message.mtype == Connect)
+    {
+        printf("Connect with other client with qid: %d", message.data);
+    }
+    else if(message.mtype == Stop)
+    {
+        printf("Server will be closed...\n");
+        exit(0);
+    }
+}
+
+void get_id()
+{
+    struct message message = {Init, 0, client_qid};
+    msgsnd(server_qid, &message, sizeof message, 0);
+    msgrcv(client_qid, &message, sizeof message, -100, 0);
+    if(message.mtype == Init && message.data == -1)
+    {
+        printf("Server is full!\n");
+        exit(-1);
+    }
+    id = message.data;
+    printf("received id: %d\n", message.data);
+}
+
+void set_server_qid()
 {
     key_t server_key = ftok(SERVER_KEY_PATHNAME, PROJECT_ID);
     if(server_key == -1)
     {
         printf("Error with key - server\n");
-        return -1;
+        exit(-2);
     }
 
     if((server_qid = msgget(server_key, 0666)) == -1)
     {
         printf("Error with server_qid - client\n");
-        return -2;
+        exit(-3);
     }
+}
 
+void set_client_qid()
+{
     if((client_qid = msgget(IPC_PRIVATE, 0666)) == -1)
     {
         printf("Error with client_qid\n");
-        return -2;
+        exit(-4);
     }
 
-    struct message message = {Init, 0, client_qid};
-    msgsnd(server_qid, &message, sizeof message, 0);
-    struct message id_message;
-    msgrcv(client_qid, &id_message, sizeof id_message, -100, 0);
-    if(id_message.mtype == Init && id_message.data == -1)
-    {
-        printf("Server is full!\n");
-        return 0;
-    }
+}
+
+int main()
+{
+    set_server_qid();
+    set_client_qid();
+
+    get_id();
     atexit(close_client);
     signal(SIGINT, exit);
-    id = id_message.data;
-    printf("received id: %d\n", id_message.data);
+
 
     char* command = malloc(100);
     int option = 0;
@@ -116,7 +147,7 @@ int main()
         {
             disconnect();
         }
-//        msgrcv(client_qid, &message, sizeof message, -100, 0);
+        check_for_message();
     }
     return 0;
 }

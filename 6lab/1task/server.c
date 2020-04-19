@@ -87,23 +87,24 @@ void add_client(int client_qid)
 
 void connect_client(int client_id, int other_client_id)
 {
+    struct message message = {Connect, -1, -1};
     if(is_on_stack(other_client_id) || other_client_id >= MAX_CLIENT_COUNT)
     {
         printf("[SERVER] There is no client with this id\n");
-        struct message message = {Connect, -1, -1};
+
         msgsnd(clients[client_id].qid, &message, sizeof message, 0);
+        return;
     }
-    struct message message = {Connect, -1, -1};
 
     if(clients[other_client_id].peer == NULL)
     {
+        message.data = clients[client_id].qid;
         msgsnd(clients[other_client_id].qid, &message, sizeof message, 0);
         message.data = clients[other_client_id].qid;
         clients[other_client_id].peer = &clients[client_id];
         clients[client_id].peer = &clients[other_client_id];
-//        return;
     }
-//    printf("[SERVER] This client is busy\n");
+
     msgsnd(clients[client_id].qid, &message, sizeof message, 0);
 }
 
