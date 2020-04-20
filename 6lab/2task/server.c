@@ -57,36 +57,41 @@ void close_server()
 //#TODO
 void send_list(int client_id)
 {
-//    struct message message = { List };
-//    int size = 0;
-//
-//    for (int i = 0; i < MAX_CLIENT_COUNT; i++)
-//        if (clients[i].descriptor != 0 && i != client_id) {
-//            message.List.clients[size].id = i;
-//            message.List.clients[size].available = clients[i].peer == NULL;
-//            size++;
-//        }
-    printf("TODO\n");
-//    message.List.size = size;
-//    mq_send(clients[client_id].descriptor, message, sizeof message, 0);
+    char* clients_list = malloc(1000);
+    memset(clients_list, '\0', strlen(clients_list));
+    char* next_client = malloc(100);
+    for (int i = 0; i < MAX_CLIENT_COUNT; i++)
+        if (clients[i].descriptor != 0 && i != client_id) {
+            char* available = "not available";
+            if(clients[i].peer == NULL)
+                available = "available";
+
+            memset(clients_list, '\0', strlen(clients_list));
+            sprintf(next_client, "client_id: %d is %s\n", i, available);
+            strcat(clients_list, next_client);
+        }
+    printf("list: %s %lu\n", clients_list, strlen(clients_list));
+    mq_send(clients[client_id].descriptor, clients_list, strlen(clients_list), 0);
 }
 
-void add_client(int client_qid)
+void add_client(char* client_queue_name)
 {
     int new_id = pop();
 //    struct message id_message = {Init, -1, new_id};
     char message[12];
+    int client_descriptor = mq_open(client_queue_name, O_WRONLY, 0666, NULL);
+    memset(message, '\0', sizeof(message));
     sprintf(message, "%d", new_id);
     if(new_id == -1)
     {
         push(-1);
     } else
     {
-        clients[new_id].descriptor = client_qid;
+        clients[new_id].descriptor = client_descriptor;
         clients[new_id].peer = NULL;
-        printf("[SERVER] add_client with id: %d\n", new_id);
+        printf("[SERVER] add_client with id: %d and descriptor: %d\n", new_id, client_descriptor);
     }
-    mq_send(client_qid, message, sizeof message, 0);
+    mq_send(client_descriptor, message, sizeof message, 0);
 
 }
 
@@ -94,7 +99,7 @@ void connect_client(int client_id, int other_client_id)
 {
     char message[MAX_SIZE];
     sprintf(message, "-1");
-    if(is_on_stack(other_client_id) || other_client_id >= MAX_CLIENT_COUNT)
+    if(is_on_stack(other_client_id) || other_client_id >= MAX_CLIENT_COUNT || client_id == other_client_id)
     {
         printf("[SERVER] There is no client with this id\n");
 //        struct message message = {Connect, -1, -1};
@@ -122,9 +127,32 @@ void disconnect_client(int client_id)
 void remove_client(int client_id)
 {
     printf("[SERVER] remove client with id %d\n", client_id);
+    mq_close(clients[client_id].descriptor);
     clients[client_id].descriptor = 0;
     clients[client_id].peer = NULL;
     push(client_id);
+}
+
+char* split_message(const char* message, int* type, int* id)
+{
+    (*type) = message[0] - '0';
+    int end_of_id = 1;
+    while(message[end_of_id] != ' ')
+    {
+        end_of_id++;
+    }
+    char id_str[5];
+    memset(id_str, '\0', sizeof(id_str));
+    strncpy(id_str, message+1, end_of_id - 1);
+    printf("id: %s", id_str);
+    (*id) = atoi(id_str);
+    char* data = malloc(100);
+    memset(data, '\0', sizeof(id_str));
+    if(strlen(message) > end_of_id + 1)
+    {
+        strcpy(data, &message[end_of_id+1]);
+    }
+    return data;
 }
 
 int main()
@@ -155,29 +183,33 @@ int main()
     for(int i = -1; i < MAX_CLIENT_COUNT; i++)
         push(i);
 
-    char* msg = "";
+    char* msg = malloc(MAX_SIZE);
     bool running = true;
 
     while(running)
     {
-        printf("%zd", mq_receive(server_descriptor, msg, MAX_SIZE, NULL));
-        perror("");
+        if(mq_receive(server_descriptor, msg, MAX_SIZE, NULL) == -1)
+        {
+            perror("mq receive\n");
+        }
+//        printf("mq_receive: %zd\n", );
+//        perror("");
         printf("[SERVER] message received %s\n", msg);
-        int type = msg[0];
-        char* client_id_str = strtok(msg, " ");
-        int client_id = atoi(client_id_str);
-        int data = atoi(msg);
-        printf("[SERVER] client %d, data %d\n", client_id, data);
+        int type = 0;
+        int client_id = 0;
+        char* data;
+        data = split_message(msg, &type, &client_id);
+        printf("[SERVER] client id: %d, data: %s\n", client_id, data);
         switch(type)
         {
             case Init:
-                add_client(client_id);
+                add_client(data);
                 break;
             case List:
                 send_list(client_id);
                 break;
             case Connect:
-                connect_client(client_id, data);
+                connect_client(client_id, atoi(data));
                 break;
             case Disconnect:
                 disconnect_client(client_id);

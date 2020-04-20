@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define SERVER_QUEUE_NAME "/cos"
+#define SERVER_QUEUE_NAME "/server1"
 
 #define MAX_CLIENT_COUNT 10
 #define MAX_SIZE 8192
