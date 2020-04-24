@@ -18,22 +18,22 @@
 
 #define MAX_SIZE 15
 
-void modify_sem(int sem_id, int type,  short int value)
+void modify_sem(int sem_id, short int value)
 {
-    struct sembuf sem_operations = {type, value, 0};
+    struct sembuf sem_operations = {0, value, 0};
 
     if (semop(sem_id, &sem_operations, 1))
         printf("Could not update semaphore\n");
 }
 
-void increase_sem(int sem_id, int type)
+void increase_sem(int sem_id)
 {
-    modify_sem(sem_id, type, 1);
+    modify_sem(sem_id, 1);
 }
 
-void decrease_sem(int sem_id, int type)
+void decrease_sem(int sem_id)
 {
-    modify_sem(sem_id, type, -1);
+    modify_sem(sem_id, -1);
 }
 
 void printf_info(int pid, char* activity, int current_order, int order_to_prepare, int order_to_send)
