@@ -13,37 +13,64 @@
 #include <sys/shm.h>
 
 #define PROJECT_PATH "/home/tmek"
-#define PREPARER_ID 1
-#define PACKER_ID 2
+#define ID 1
 
 #define MAX_SIZE 15
 
-void modify_sem(int sem_id, short int value)
+enum type
 {
-    struct sembuf sem_operations = {0, value, 0};
+    ACCESS = 0,
+    SPACE_FOR_NEW_ORDERS = 1, // zmniejsza sie gdy dodajemy nowe zamowienie, zwieksza sie gdy wysylamy to zamowienie
+    NUMBER_OF_NOT_PACKED_ORDERS = 2, // zmniejszamy gdy zapakujemy, dodajemy gdy zostanie dodane zamowienie
+    NUMBER_OF_NOT_SENT_ORDERS = 3 // zmniejszamy gdy wyslemy, zwiekszamy gdy zapakujemy
+};
+
+struct info
+{
+    int begin_order;
+    int buf[MAX_SIZE];
+};
+
+
+struct info* get_struct_info(int key, int* sem_id)
+{
+    (*sem_id) = semget(key, 0, 0);
+    int tmp = shmget(key, 0, 0666);
+    return (struct info*) shmat(tmp, NULL, 0);
+}
+
+void modify_sem(int sem_id, short int value, int type, short flag)
+{
+    struct sembuf sem_operations = {type, value, flag};
 
     if (semop(sem_id, &sem_operations, 1))
         printf("Could not update semaphore\n");
 }
 
-void increase_sem(int sem_id)
+void increase_sem(int sem_id, int type, short flag)
 {
-    modify_sem(sem_id, 1);
+    modify_sem(sem_id, 1, type, flag);
 }
 
-void decrease_sem(int sem_id)
+void decrease_sem(int sem_id, int type, short flag)
 {
-    modify_sem(sem_id, -1);
+    modify_sem(sem_id, -1, type, flag);
 }
 
-void printf_info(int pid, char* activity, int current_order, int order_to_prepare, int order_to_send)
+int get_sem_value(int sem_id, int type)
+{
+    return semctl(sem_id, type, GETVAL);
+}
+
+void printf_info(int pid, char* activity, int order, int semaphores)
 {
     struct timeval current_time;
     gettimeofday(&current_time, NULL);
 
     printf("PID: %d TIME: %lu : %lu. %s %d. Liczba zamówień do przygotowania: %d. Liczba zamówień do wysłania: %d \n"
             ,pid, current_time.tv_sec % 100, current_time.tv_usec,
-            activity, current_order, order_to_prepare, order_to_send);
+            activity, order, get_sem_value(semaphores, NUMBER_OF_NOT_PACKED_ORDERS),
+            get_sem_value(semaphores, NUMBER_OF_NOT_SENT_ORDERS));
 }
 
 

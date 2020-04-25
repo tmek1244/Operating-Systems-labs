@@ -1,47 +1,101 @@
+#include <sys/wait.h>
+#include <time.h>
+
 #include "common.h"
 
-
-int sem_preparer_id, shared_memory_preparer_id;
-int sem_packer_id, shared_memory_packer_id;
+int semaphores, shared_memory;
 
 
 void clean_memory()
 {
-    semctl(sem_preparer_id, 0, IPC_RMID);
-    shmctl(shared_memory_preparer_id, IPC_RMID, NULL);
+    semctl(semaphores, 0, IPC_RMID);
+    semctl(semaphores, 1, IPC_RMID);
+    semctl(semaphores, 2, IPC_RMID);
+    semctl(semaphores, 3, IPC_RMID);
+    shmctl(shared_memory, IPC_RMID, NULL);
 
-//    semctl(sem_packer_id, 0, IPC_RMID);
-//    shmctl(shared_memory_packer_id, IPC_RMID, NULL);
     printf("Cleaning memory...\n");
 }
 
 int main(int argc, char* argv[])
 {
-    key_t preparer_key = ftok(PROJECT_PATH, PREPARER_ID);
-    sem_preparer_id = semget(preparer_key, 1, IPC_CREAT | 0666);
-    shared_memory_preparer_id = shmget(preparer_key, MAX_SIZE *  sizeof(int), IPC_CREAT | 0666);
+    int seed;
+    time_t tt;
+    seed = time(&tt);
+    srand(seed);
+    key_t key = ftok(PROJECT_PATH, ID);
+    semaphores = semget(key, 4, IPC_CREAT | 0666);
+    shared_memory = shmget(key, sizeof(struct info), IPC_CREAT | 0666);
 
-//    key_t packer_key = ftok(PROJECT_PATH, PACKER_ID);
-//    sem_packer_id = semget(packer_key, 1, IPC_CREAT | 0666);
-//    shared_memory_packer_id = shmget(packer_key, MAX_SIZE, IPC_CREAT | 0666);
+//    union semun
+//    {
+//        int val;
+//        struct semid_ds *buf;
+//        ushort array [1];
+//    } sem_attr;
+//    sem_attr.val = 1;
+    printf("%d\n", semctl(semaphores, ACCESS, SETVAL, 1));
+    semctl(semaphores, SPACE_FOR_NEW_ORDERS, SETVAL, MAX_SIZE);
+    semctl(semaphores, NUMBER_OF_NOT_PACKED_ORDERS, SETVAL, 0);
+    semctl(semaphores, NUMBER_OF_NOT_SENT_ORDERS, SETVAL, 0);
+    printf("[MAIN] %d\n", get_sem_value(semaphores, ACCESS));
+    printf("[MAIN] %d\n", get_sem_value(semaphores, SPACE_FOR_NEW_ORDERS));
+    printf("[MAIN] %d\n", get_sem_value(semaphores, NUMBER_OF_NOT_PACKED_ORDERS));
+    printf("[MAIN] %d\n", get_sem_value(semaphores, NUMBER_OF_NOT_SENT_ORDERS));
 
     atexit(clean_memory);
-    semctl(sem_preparer_id, 0, SETVAL, 1);
-    semctl(sem_packer_id, 0, SETVAL, 1);
+    signal(SIGINT, exit);
 
-    int* buf = (int*) shmat(shared_memory_preparer_id, NULL, 0);
-//    printf("%d", *buf);
+//
+    struct info* info = (struct info*) shmat(shared_memory, NULL, 0);
+    info->begin_order = 0;
     printf("zaczynam...\n");
-    sleep(10);
-    for(int i = 0; i < 20; i++)
+
+
+    for(int i = 0; i < 5; i++)
     {
-        printf("cos");
-        printf("Next value: %d\n", buf[i % MAX_SIZE]);
-//        sleep(1);
+        int pid = fork();
+        if(pid < 0)
+        {
+            printf("ERROR - fork\n");
+            return 0;
+        } else if(pid == 0)
+        {
+            execl("preparer", "preparer", NULL);
+            return 0;
+        }
+
     }
+    for(int i = 0; i < 3; i++)
+    {
+        int pid = fork();
+        if(pid < 0)
+        {
+            printf("ERROR - fork\n");
+            return 0;
+        } else if(pid == 0)
+        {
+            execl("packer", "packer", NULL);
+            return 0;
+        }
 
+    }
+    for(int i = 0; i < 1; i++)
+    {
+        int pid = fork();
+        if(pid < 0)
+        {
+            printf("ERROR - fork\n");
+            return 0;
+        } else if(pid == 0)
+        {
+            execl("sender", "sender", NULL);
+            return 0;
+        }
 
-
+    }
+    int pid = -1;
+    while(wait(&pid));
 
 
     return 0;
