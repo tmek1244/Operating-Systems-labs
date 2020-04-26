@@ -1,25 +1,17 @@
 #include "common.h"
 
-#include <time.h>
 
 char* activity = "Wysłałem zamówienie o wielkości ";
 struct info* memory;
 int semaphores;
 
-//int get_order()
-//{
-//    decrease_sem(packer_id);
-//    int order = take_order(memory_packer);
-//    increase_sem(packer_id);
-//    return order;
-//}
 
 void send_order()
 {
     sleep(1);
     if(get_sem_value(semaphores, NUMBER_OF_NOT_SENT_ORDERS) == 0)
     {
-        printf("There is no packed order!\n");
+        printf("[SENDER] Nie ma zamówienia zapakowanego do wysłania!\n");
     } else
     {
         int order = memory->buf[memory->begin_order];
@@ -33,14 +25,12 @@ void send_order()
     }
 }
 
-
 void get_access_to_array()
 {
     decrease_sem(semaphores, ACCESS, 0);
     send_order();
     increase_sem(semaphores, ACCESS, 0);
 }
-
 
 
 int main(int argc, char* argv[])
@@ -53,5 +43,7 @@ int main(int argc, char* argv[])
     }
 
     shmdt(memory);
+    printf("[SENDER] END\n");
+
     return 0;
 }
