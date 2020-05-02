@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/shm.h>
+#include <signal.h>
 
 #define PROJECT_PATH "/home/tmek"
 #define ID 1

@@ -5,6 +5,11 @@ char* activity = "Wysłałem zamówienie o wielkości ";
 struct info* memory;
 int semaphores;
 
+void clear_memory()
+{
+    shmdt(memory);
+    printf("[SENDER] END\n");
+}
 
 void send_order()
 {
@@ -41,9 +46,9 @@ int main(int argc, char* argv[])
     {
         get_access_to_array();
     }
+    atexit(clear_memory);
+    signal(SIGINT, exit);
 
-    shmdt(memory);
-    printf("[SENDER] END\n");
 
     return 0;
 }

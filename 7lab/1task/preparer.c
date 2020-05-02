@@ -12,6 +12,12 @@ int get_random_number()
     return (int)(rand() / (RAND_MAX + 1.0) * 100.0);
 }
 
+void clear_memory()
+{
+    shmdt(memory);
+    printf("[PREPARER] END\n");
+}
+
 int place_order()
 {
     increase_sem(semaphores, NUMBER_OF_NOT_PACKED_ORDERS, 0);
@@ -56,7 +62,9 @@ int main(int argc, char* argv[])
     {
         get_access_to_array();
     }
-    shmdt(memory);
-    printf("[PREPARER] END\n");
+
+    atexit(clear_memory);
+    signal(SIGINT, exit);
+
     return 0;
 }

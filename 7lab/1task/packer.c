@@ -5,6 +5,12 @@ char* activity = "Przygotowałem zamówienie o wielkości ";
 struct info* memory;
 int semaphores;
 
+void clear_memory()
+{
+    shmdt(memory);
+    printf("[PACKER] END\n");
+}
+
 int get_order()
 {
     decrease_sem(semaphores, NUMBER_OF_NOT_PACKED_ORDERS, 0);
@@ -43,8 +49,8 @@ int main(int argc, char* argv[])
     {
         get_access_to_array();
     }
+    atexit(clear_memory);
+    signal(SIGINT, exit);
 
-    shmdt(memory);
-    printf("[PACKER] END\n");
     return 0;
 }
