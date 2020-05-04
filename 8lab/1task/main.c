@@ -1,32 +1,21 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdlib.h>
 #include <pthread.h>
-#include <sys/times.h>
-#include <sys/time.h>
-
-#define buff_size 512
-#define MAX_THREADS_NUM 8
 
 const int M = 255;
-const char * delims = " \t\n\r";
 typedef struct timeval timeval;
 
-int thread_number;//       = 4;
-char * distribution_type;     // block / interleaved
-char * image_input;//  = "apple.pgm";
+int thread_number;
+char * distribution_type;
+char * image_input;
 char * output_file;
 
 int **picture;
 int height, width;
 int **result;
-
-
-timeval threads_times[MAX_THREADS_NUM];
 
 struct thread_info {
     int begin;
@@ -35,57 +24,6 @@ struct thread_info {
 };
 
 struct thread_info **threads_info;
-
-
-timeval gettime(){
-    timeval time;
-    gettimeofday(&time, NULL);
-    return time;
-}
-
-timeval diff_time(timeval s_time, timeval e_time){
-    timeval diff;
-    diff.tv_sec = e_time.tv_sec - s_time.tv_sec;
-    diff.tv_usec = e_time.tv_usec - s_time.tv_usec;
-
-    if (e_time.tv_usec < s_time.tv_usec){
-        --diff.tv_sec;
-        diff.tv_usec = - diff.tv_usec;
-    }
-    return diff;
-}
-
-void save_picture(int w, int h, int ** J, FILE * fp){
-    fprintf(fp, "P2\n");
-    fprintf(fp, "%d %d\n", w, h);
-    fprintf(fp, "%d\n", 255);
-
-    for (int i = 0; i < h; ++i){
-        int j;
-        for (j = 0; j < w-1; ++j){
-            fprintf(fp, "%d ", J[i][j]);
-        }
-        fprintf(fp, "%d\n", J[i][j]);
-    }
-
-    fclose(fp);
-}
-
-void save_results(timeval time, int c, const char * way_of_division){ // czasy
-    FILE *fp = fopen("Times.txt", "a");
-    fprintf(fp, "####### START ########\n");
-    if (strcmp(way_of_division, "block") == 0)      fprintf(fp, "BLOCKED mode.\n");
-    else                                            fprintf(fp, "INTERLEAVED mode.\n");
-    fprintf(fp, "%d threads with c = %d worked for %ld.%06ld\n", thread_number, c, time.tv_sec, time.tv_usec);
-    for (int i = 0; i < thread_number; ++i){
-        fprintf(fp, "\t%d-th thread worked for %ld.%ld\n", i, threads_times[i].tv_sec, threads_times[i].tv_usec);
-    }
-    fprintf(fp, "######## END #########\n\n");
-    fclose(fp);
-}
-
-
-
 
 void read_image(FILE* image)
 {
@@ -105,9 +43,9 @@ void read_image(FILE* image)
             fscanf(image, "%d", &picture[i][j]);
 }
 
-void free_2D_array(int **array)
+void free_2D_array(int **array, int size)
 {
-    for(int i = 0; i < height; i++)
+    for(int i = 0; i < size; i++)
         free(array[i]);
     free(array);
 }
@@ -152,7 +90,7 @@ void set_up_distribution()
 
     }else {
         printf("Sposoby podzialu: sign / block / interleaved\n");
-        free_2D_array(picture);
+        free_2D_array(picture, height);
         exit(-1);
     }
 }
@@ -163,17 +101,13 @@ void* sign(void* info)
     clock_t t;
     t = clock();
     struct thread_info *thread_info = (struct thread_info *) info;
-//    printf("PRZEDZIAL: %d %d\n", thread_info->begin, thread_info->additional_value);
-//    perror("sign");
+
     for(int i = 0; i < width; i++)
     {
         for(int j = 0; j < height; j++)
         {
-//            printf("%d    %d\n", picture[j][i], result[thread_info->id][picture[j][i]]);
-//            pintf
             if(picture[j][i] >= thread_info->begin && picture[j][i] < thread_info->additional_value + thread_info->begin)
                 result[thread_info->id][picture[j][i]]++;
-//            perror("update");
         }
     }
     double* time = malloc(sizeof(double));
@@ -191,7 +125,6 @@ void* block(void* info)
     {
         for(int j = 0; j < height; j++)
         {
-//            printf("%d %d\n", j, i);
             result[thread_info->id][picture[j][i]]++;
         }
     }
@@ -209,7 +142,6 @@ void* interleaved(void* info)
     {
         for(int j = 0; j < height; j++)
         {
-//            printf("%d %d\n", j, i);
             result[thread_info->id][picture[j][i]]++;
         }
     }
@@ -225,7 +157,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    thread_number    = atoi(argv[1]);
+    thread_number = atoi(argv[1]);
     distribution_type  = argv[2];
     image_input  = argv[3];
     output_file = argv[4];
@@ -277,6 +209,7 @@ int main(int argc, char **argv) {
         void* time = NULL;
         pthread_join(thread[i], &time);
         printf("WATEK ID: %lu CZAS: %f\n", thread[i], *(double *)time);
+        free(time);
         free(threads_info[i]);
     }
 
@@ -297,10 +230,11 @@ int main(int argc, char **argv) {
     {
         fprintf(output,"kolor nr %d, wystapil %d razy\n", i, final_result[i]);
     }
-//
-//    free_2D_array(result);
+
     fclose(image);
     fclose(output);
-    free_2D_array(picture);
+    free_2D_array(picture, height);
+    free_2D_array(result, thread_number);
+
     return 0;
 }
