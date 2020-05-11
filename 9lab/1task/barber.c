@@ -76,7 +76,7 @@ void* client()
         }
         printf("Klient: Zajete; %ld\n", id);
         pthread_mutex_unlock(&mutex);
-        sleep(random() % 5);
+        sleep(random() % 3 + 1);
     }
 
     return NULL;
@@ -103,11 +103,9 @@ int main(int argc, char** argv)
     pthread_t* thread_ids = calloc(client_number + 1, sizeof(pthread_t));
     pthread_create(&thread_ids[0], NULL, barber, NULL);
 
-    for(int i = 0; i < chair_number; i++)
-        chairs[i] = 0;
     for(int i = 1; i <= client_number; i++)
     {
-        sleep(random() % 5);
+        sleep(random() % 3);
         pthread_create(&thread_ids[i], NULL, client, NULL);
     }
 
